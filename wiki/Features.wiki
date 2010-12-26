@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This application was written because I wanted to automatically synchronize my music folder in Wuala to my Android phone. Currently there is no full featured Wuala client for android, so here is a lightweight client using Wuala web API.
+This application was written because I wanted to automatically synchronize my music folder in [http://www.wuala.com Wuala] to my Android phone. Currently there is no full featured Wuala client for android, so here is a lightweight client using Wuala web API.
 
 
 = Details =
