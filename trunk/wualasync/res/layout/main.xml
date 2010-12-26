@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView 
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    android:textStyle="bold" android:typeface="monospace"/>
+<TextView android:text="NB! Please note, that changes made in the Wuala client will take some time to reach the Wuala web server! So please wait at least 10-15 minutes before synchronizing. Also, if you just shared a folder with a key, it would take even longer to reach the web servers, so please test your folder link in browser before trying to sync it for the first time." android:id="@+id/TextView01" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+
+
+
+
+
+
+
+
+
+<Button android:text="Show sync progress" android:id="@+id/Button01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:onClick="showSyncButtonClickHandler"></Button>
+<Button android:text="Execute" android:id="@+id/Button04" android:layout_width="wrap_content" android:layout_height="wrap_content" android:onClick="execSyncButtonClickHandler"></Button>
+
+
+<Button android:onClick="startServiceButtonClickHandler" android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/Button02" android:text="Start service"></Button>
+<Button android:onClick="stopServiceButtonClickHandler" android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/Button03" android:text="Stop service"></Button>
+</LinearLayout>
