@@ -1,0 +1,15 @@
+#summary Program features
+
+= Introduction =
+
+This application was written because I wanted to automatically synchronize my music folder in Wuala to my Android phone. Currently there is no full featured Wuala client for android, so here is a lightweight client using Wuala web API.
+
+
+= Details =
+
+Some features provides by the application:
+  * Configure Wuala web URL and key as the synchronization source
+  * Files are synchronized to Music folder on the phone
+  * Synchronization process runs in background, every 1 hour
+  * Graphical interface displaying synchronization progress
+  * Does not ask for your Wuala username or password!
