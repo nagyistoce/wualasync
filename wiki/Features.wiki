@@ -10,6 +10,7 @@ This application was written because I wanted to automatically synchronize my mu
 Some features provides by the application:
   * Configure Wuala web URL and key as the synchronization source
   * Files are synchronized to Music folder on the phone
+  * Synchronization is only one-way! From Wuala to Android.
   * Synchronization process runs in background, every 1 hour
   * Graphical interface displaying synchronization progress
   * Does not ask for your Wuala username or password!
