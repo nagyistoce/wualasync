@@ -32,6 +32,7 @@ public class SyncFiles extends Activity {
 	protected String PREFS_WUALA_KEY = "";
 	protected boolean PREFS_WUALA_DELETE = false;
 	protected int PREFS_WUALA_INTERVAL = 60;
+	protected boolean PREFS_ONLY_WIFI = true;
 	
     /** Called when the activity is first created. */
     @Override
@@ -164,6 +165,7 @@ public class SyncFiles extends Activity {
         String interval = preferences.getString("serviceSyncInterval", "60");
 
     	PREFS_WUALA_DELETE = preferences.getBoolean("allowDelete", false);
+    	PREFS_ONLY_WIFI = preferences.getBoolean("onlyWifi", true);
     	try {
     		PREFS_WUALA_INTERVAL = Integer.parseInt(interval);
     	} catch (Exception e) {

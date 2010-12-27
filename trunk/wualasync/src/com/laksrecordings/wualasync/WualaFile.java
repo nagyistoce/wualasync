@@ -7,6 +7,7 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 
+import android.media.MediaScannerConnection;
 import android.os.StatFs;
 
 import android.util.Log;
@@ -101,6 +102,8 @@ public class WualaFile {
 		        fos.close();
 		        is.close();
 		        createFileName = file.getAbsolutePath();
+		        // Scan file with Android Mediascanner
+		        MediaScannerConnection.scanFile(MAIN_SERVICE, new String[] {createFileName}, null, null);
 		        
 			} catch (Exception e) {
 		        file.delete();
