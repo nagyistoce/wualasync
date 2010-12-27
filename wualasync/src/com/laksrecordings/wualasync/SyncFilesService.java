@@ -100,7 +100,7 @@ public class SyncFilesService extends Service {
 	
 	private boolean checkInternet() {
 		ConnectivityManager cm = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
-		return cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isAvailable() || 
+		return (cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isAvailable() && !MAIN_ACTIVITY.PREFS_ONLY_WIFI) || 
 		  cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isAvailable();
 	}
 	

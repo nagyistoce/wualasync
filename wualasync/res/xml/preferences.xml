@@ -5,5 +5,6 @@
 <EditTextPreference android:title="Wuala folder key" android:summary="If the shared Wuala folder is not public, but shared with weblink instead, then enter the key here." android:key="wualaKey"></EditTextPreference>
 <CheckBoxPreference android:key="allowDelete" android:summary="When file is deleted from Wuala folder, delete the file in phone also" android:title="Allow file deletion"></CheckBoxPreference>
 <ListPreference android:title="Syncronization interval" android:summary="How often to check for updates" android:entryValues="@array/update_intervals" android:entries="@array/update_interval_display" android:defaultValue="60" android:key="serviceSyncInterval"></ListPreference>
+<CheckBoxPreference android:key="onlyWifi" android:summary="Allow synchronization only over Wifi network" android:defaultValue="true" android:title="Use only Wifi"></CheckBoxPreference>
 </PreferenceCategory>
 </PreferenceScreen>
