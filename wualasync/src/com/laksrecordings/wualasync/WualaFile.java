@@ -29,13 +29,17 @@ public class WualaFile {
 		// Need to only encode multibyte UTF-8 characters
 		String s = "";
 		try {
-			for(int i = 0; i < url.length(); i++) {
-				char c = url.charAt(i);
-				if (String.valueOf(c).getBytes("UTF-8").length > 1) {
-					s = s + URLEncoder.encode(String.valueOf(c));
-				} else {
-					s = s + c;
+			if (url.getBytes("UTF-8").length > url.length()) {
+				for(int i = 0; i < url.length(); i++) {
+					char c = url.charAt(i);
+					if (String.valueOf(c).getBytes("UTF-8").length > 1) {
+						s = s + URLEncoder.encode(String.valueOf(c));
+					} else {
+						s = s + c;
+					}
 				}
+			} else {
+				s = url;
 			}
 		} catch (Exception e) {
 			s = url;
