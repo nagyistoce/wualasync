@@ -18,7 +18,7 @@ public class SyncFilesService extends Service {
 	private String LOG_TAG = getClass().getSimpleName();
 	private File dstPath;
 	private ArrayList<WualaFile> wf = new ArrayList<WualaFile>();
-	private boolean cancelRecieved = false;
+	protected boolean cancelRecieved = false;
 	private static boolean executionRunning = false;
 	private static boolean executionRequested = false;
 
@@ -162,6 +162,7 @@ public class SyncFilesService extends Service {
 						UI_UPDATE_LISTENER.setCurrentFile(i+1);
 						UI_UPDATE_LISTENER.setFilename(wf.get(i).toString());
 					}
+					wf.get(i).setMainService(this);
 					int retry = RETRY_COUNT;
 					while (retry > 0) {
 						if (cancelRecieved || !isStorageAvailableAndWritable() || !checkInternet())

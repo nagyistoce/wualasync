@@ -17,12 +17,17 @@ public class WualaFile {
 	private String url;
 	private long filesize;
 	private static String LOG_TAG = "WualaFile";
+	private SyncFilesService MAIN_SERVICE;
 	
 	WualaFile(String directory, String filename, String url, long filesize) {
 		this.directory = directory;
 		this.filename = filename;
 		this.url = encodeUrl(url);
 		this.filesize = filesize;
+	}
+	
+	public void setMainService(SyncFilesService s) {
+		this.MAIN_SERVICE = s;
 	}
 	
 	public static String encodeUrl(String url) {
@@ -89,6 +94,9 @@ public class WualaFile {
 		        int len1 = 0;
 		        while ((len1 = is.read(buffer)) != -1) {
 		            fos.write(buffer, 0, len1);
+		            // Check for cancel signal
+		            if (MAIN_SERVICE != null && MAIN_SERVICE.cancelRecieved)
+				        throw new RuntimeException("Cancel recieved from main service");
 		        }
 		        fos.close();
 		        is.close();
