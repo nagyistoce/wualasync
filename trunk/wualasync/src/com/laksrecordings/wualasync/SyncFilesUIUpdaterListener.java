@@ -10,5 +10,6 @@ public interface SyncFilesUIUpdaterListener {
 	public void setStopping();
 	public void setCannotExecute();
 	public void setNotConfigured();
+	public void setServiceStateChange();
 
 }
