@@ -23,6 +23,6 @@
 <Button android:text="Execute" android:id="@+id/Button04" android:layout_width="wrap_content" android:layout_height="wrap_content" android:onClick="execSyncButtonClickHandler"></Button>
 
 
-<Button android:onClick="startServiceButtonClickHandler" android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/Button02" android:text="Start service"></Button>
-<Button android:onClick="stopServiceButtonClickHandler" android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/Button03" android:text="Stop service"></Button>
+<ToggleButton android:textOn="Service started" android:textOff="Service stopped" android:id="@+id/ToggleButton01" android:layout_width="match_parent" android:layout_height="wrap_content"  android:onClick="serviceButtonClickHandler"></ToggleButton>
+
 </LinearLayout>

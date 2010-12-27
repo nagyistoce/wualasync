@@ -13,11 +13,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
+import android.widget.ToggleButton;
 
 
 public class SyncFiles extends Activity {
 	private static final int PROGRESS_DIALOG = 0;
     private ProgressDialog progressDialog;
+    private ToggleButton serviceButton;
 	private String LOG_TAG = getClass().getSimpleName();
 	//
 	private int progressMax = 0;
@@ -37,6 +39,7 @@ public class SyncFiles extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         CURRENT_ACTIVITY = this;
+        serviceButton = (ToggleButton)findViewById(R.id.ToggleButton01);
         SyncFilesService.setUIUpdaterListener(new SyncFilesUIUpdaterListener() {
         	public void setFilename(String filename) {
         		progressMessage = filename;
@@ -80,6 +83,10 @@ public class SyncFiles extends Activity {
         		progressMessage = "Application is not configured";
         		updateProgress();        		
         	}
+        	public void setServiceStateChange() {
+        		serviceButton.setChecked(SyncFilesService.isServiceRunning());
+        		updateProgress();        		        		
+        	}
         	private void updateProgress() {
         		CURRENT_ACTIVITY.runOnUiThread(new Runnable() {
         			public void run() {
@@ -97,6 +104,7 @@ public class SyncFiles extends Activity {
     
     protected void onResume() {
     	super.onRestart();
+		serviceButton.setChecked(SyncFilesService.isServiceRunning());
         readPrefs();
     }
     
@@ -190,13 +198,16 @@ public class SyncFiles extends Activity {
         PREFS_WUALA_KEY = key;   	
     }
     		
-    public void startServiceButtonClickHandler(View view) {
-    	startService();
-    	showSyncButtonClickHandler(view);
-    }
-
-    public void stopServiceButtonClickHandler(View view) {
-    	stopService();
+    public void serviceButtonClickHandler(View view) {
+    	if (serviceButton.isChecked() && !SyncFilesService.isServiceRunning()) {
+    		startService();
+        	showSyncButtonClickHandler(view);
+    	} else if (!serviceButton.isChecked() && SyncFilesService.isServiceRunning()) {
+        	stopService();    		
+    	} else {
+    		serviceButton.setChecked(SyncFilesService.isServiceRunning());
+    		Log.d(LOG_TAG, "Service state and button state did not match");
+    	}
     }
     
 	public void showSyncButtonClickHandler(View view) {

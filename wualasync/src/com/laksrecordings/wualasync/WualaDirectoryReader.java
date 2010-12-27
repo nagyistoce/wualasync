@@ -18,10 +18,15 @@ public class WualaDirectoryReader {
 	final String LOG_TAG = getClass().getSimpleName();
 	private File dstPath;
 	private DataHelper db;
+	private SyncFilesService MAIN_SERVICE;
 	
 	WualaDirectoryReader(String url, String key) {
 		this.url = url;
 		this.key = key;
+	}
+	
+	public void setMainService(SyncFilesService s) {
+		this.MAIN_SERVICE = s;
 	}
 	
 	public void setDB(DataHelper db) {
@@ -54,6 +59,9 @@ public class WualaDirectoryReader {
         	Log.d(LOG_TAG, "Dir: "+wualaurl+"; "+e.getMessage());
         	throw new RuntimeException(e);
         }
+        
+        if (MAIN_SERVICE != null && MAIN_SERVICE.cancelRecieved)
+        	throw new RuntimeException("Cancel recieved from main service");
 
         // Files
         try {
@@ -85,8 +93,10 @@ public class WualaDirectoryReader {
         	Log.d(LOG_TAG, "File: "+wualaurl+"; "+e.getMessage());
         	throw new RuntimeException(e);
         } 
-        
-        
+                
+        if (MAIN_SERVICE != null && MAIN_SERVICE.cancelRecieved)
+        	throw new RuntimeException("Cancel recieved from main service");
+
         // Read subdirectories
         for (int i = 0; i < subdirs.size(); i++) {
         	readWualaDir(subdirs.get(i).url, subdirs.get(i).relDirName);

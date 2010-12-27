@@ -21,6 +21,7 @@ public class SyncFilesService extends Service {
 	protected boolean cancelRecieved = false;
 	private static boolean executionRunning = false;
 	private static boolean executionRequested = false;
+	private static boolean serviceRunning = false;
 
 	private Timer timer = new Timer();
 	private Timer reqTimer = new Timer();
@@ -40,10 +41,14 @@ public class SyncFilesService extends Service {
 	private static SyncFilesUIUpdaterListener UI_UPDATE_LISTENER;
 	private static SyncFiles MAIN_ACTIVITY;
 
-
+    ///////////////////////////////////////////
+	// Service control functions
+    ///////////////////////////////////////////
+	
 	@Override public void onCreate() {
 	  super.onCreate();
 	  // init the service here
+	  serviceRunning = true;
   	  dstPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
 	  startService();
 	}
@@ -51,6 +56,9 @@ public class SyncFilesService extends Service {
 	@Override public void onDestroy() {
 	  super.onDestroy();
 	  shutdownService();
+	  serviceRunning = false;
+  	  if (UI_UPDATE_LISTENER != null)
+  		  UI_UPDATE_LISTENER.setServiceStateChange();
 	}
 	
 	@Override
@@ -63,6 +71,12 @@ public class SyncFilesService extends Service {
 		if (!executionRunning)
 			executionRequested = true;
 	}
+	
+	public static boolean isServiceRunning() {
+		return serviceRunning;
+	}
+
+	///////////////////////////////////////////
 
 	private boolean isStorageAvailableAndWritable() {
     	boolean mExternalStorageAvailable = false;
@@ -100,11 +114,12 @@ public class SyncFilesService extends Service {
 		    	WualaDirectoryReader dr = new WualaDirectoryReader(MAIN_ACTIVITY.PREFS_WUALA_URL, MAIN_ACTIVITY.PREFS_WUALA_KEY);
 		    	dr.setDB(db);
 		    	dr.setDstPath(dstPath);
+		    	dr.setMainService(this);
 		    	wf = dr.read();
 		    	retry = 0;
 			} catch (Exception e) {
 				retry--;
-				if (retry == 0) {
+				if (retry == 0 || cancelRecieved) {
 					throw new RuntimeException(e);
 				} else {
 					try {
@@ -139,7 +154,7 @@ public class SyncFilesService extends Service {
 	}
 	
 	private void executeTask() {
-		if (MAIN_ACTIVITY.PREFS_WUALA_URL.equals("")) {
+		if (MAIN_ACTIVITY.PREFS_WUALA_URL.equals("") && UI_UPDATE_LISTENER != null) {
 			UI_UPDATE_LISTENER.setNotConfigured();
 			Log.e(LOG_TAG, "Cannot execute task, not configured");			
 		} else
@@ -176,7 +191,7 @@ public class SyncFilesService extends Service {
 						} catch (Exception e) {
 							retry--;
 							Log.e(LOG_TAG, "Download failed ("+String.valueOf(retry)+"): "+e.getMessage());
-							if (retry > 0) {
+							if (retry > 0 && !cancelRecieved) {
 								try {
 									Thread.sleep(SLEEP_ON_FAIL);
 								} catch (Exception ex) {}
