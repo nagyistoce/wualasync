@@ -6,5 +6,6 @@
 <CheckBoxPreference android:key="allowDelete" android:summary="When file is deleted from Wuala folder, delete the file in phone also" android:title="Allow file deletion"></CheckBoxPreference>
 <ListPreference android:title="Syncronization interval" android:summary="How often to check for updates" android:entryValues="@array/update_intervals" android:entries="@array/update_interval_display" android:defaultValue="60" android:key="serviceSyncInterval"></ListPreference>
 <CheckBoxPreference android:key="onlyWifi" android:summary="Allow synchronization only over Wifi network" android:defaultValue="true" android:title="Use only Wifi"></CheckBoxPreference>
+<CheckBoxPreference android:defaultValue="false" android:title="Startup service on boot" android:summary="Will syncronization service start when the mobile device is restarted" android:key="startupOnBoot"></CheckBoxPreference>
 </PreferenceCategory>
 </PreferenceScreen>

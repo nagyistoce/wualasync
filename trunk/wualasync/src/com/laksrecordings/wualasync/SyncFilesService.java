@@ -25,12 +25,14 @@ public class SyncFilesService extends Service {
 	private static boolean executionRunning = false;
 	private static boolean executionRequested = false;
 	private static boolean serviceRunning = false;
+	private static boolean executedOnStartup = false;
 	//
 	private String PREFS_WUALA_URL = "";
 	private String PREFS_WUALA_KEY = "";
 	private boolean PREFS_WUALA_DELETE = false;
 	private int PREFS_WUALA_INTERVAL = 60;
 	private boolean PREFS_ONLY_WIFI = true;
+	private boolean PREFS_START_ON_BOOT = false;
 	//
 	private Timer timer = new Timer();
 	private Timer reqTimer = new Timer();
@@ -83,6 +85,10 @@ public class SyncFilesService extends Service {
 	
 	public static boolean isServiceRunning() {
 		return serviceRunning;
+	}
+	
+	public static void thisIsDeviceStartup() {
+		executedOnStartup = true;
 	}
 
 	///////////////////////////////////////////
@@ -172,6 +178,7 @@ public class SyncFilesService extends Service {
 
     	PREFS_WUALA_DELETE = preferences.getBoolean("allowDelete", false);
     	PREFS_ONLY_WIFI = preferences.getBoolean("onlyWifi", true);
+    	PREFS_START_ON_BOOT = preferences.getBoolean("startupOnBoot", false);
     	try {
     		PREFS_WUALA_INTERVAL = Integer.parseInt(interval);
     	} catch (Exception e) {
@@ -286,9 +293,15 @@ public class SyncFilesService extends Service {
 		if (!executionRunning) {
 			cancelRecieved = false;
 			readPrefs();
-			timer.schedule(mainTask, 0, PREFS_WUALA_INTERVAL*60*1000);
-			reqTimer.schedule(reqTask, 10000, 10000);
-			Log.i(LOG_TAG, "Service started");
+			if (!executedOnStartup || (executedOnStartup && PREFS_START_ON_BOOT)) {
+				timer.schedule(mainTask, 0, PREFS_WUALA_INTERVAL*60*1000);
+				reqTimer.schedule(reqTask, 10000, 10000);
+				Log.i(LOG_TAG, "Service started");
+			} else {
+				Log.i(LOG_TAG, "Service not allowed to start on boot");				
+				this.stopSelf();
+			}
+			executedOnStartup = false;
 		} else {
 			Log.e(LOG_TAG, "Service not started, execution was still running");
 			this.stopSelf();
@@ -306,10 +319,6 @@ public class SyncFilesService extends Service {
 		} catch (Exception e) {}
 		Log.i(LOG_TAG, "Service stopped");
 	}
-	
-	/*public static void setMainActivity(SyncFiles s) {
-		MAIN_ACTIVITY = s;
-	}*/
 	
 	public static void setUIUpdaterListener(SyncFilesUIUpdaterListener l) {
 		UI_UPDATE_LISTENER = l;
