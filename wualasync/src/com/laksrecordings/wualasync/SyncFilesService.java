@@ -2,9 +2,12 @@ package com.laksrecordings.wualasync;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.os.Environment;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
@@ -22,7 +25,13 @@ public class SyncFilesService extends Service {
 	private static boolean executionRunning = false;
 	private static boolean executionRequested = false;
 	private static boolean serviceRunning = false;
-
+	//
+	private String PREFS_WUALA_URL = "";
+	private String PREFS_WUALA_KEY = "";
+	private boolean PREFS_WUALA_DELETE = false;
+	private int PREFS_WUALA_INTERVAL = 60;
+	private boolean PREFS_ONLY_WIFI = true;
+	//
 	private Timer timer = new Timer();
 	private Timer reqTimer = new Timer();
 	private TimerTask mainTask = new TimerTask() {
@@ -39,7 +48,7 @@ public class SyncFilesService extends Service {
 	};
 	//
 	private static SyncFilesUIUpdaterListener UI_UPDATE_LISTENER;
-	private static SyncFiles MAIN_ACTIVITY;
+	//private static SyncFiles MAIN_ACTIVITY;
 
     ///////////////////////////////////////////
 	// Service control functions
@@ -57,13 +66,13 @@ public class SyncFilesService extends Service {
 	  super.onDestroy();
 	  shutdownService();
 	  serviceRunning = false;
-  	  if (UI_UPDATE_LISTENER != null)
+  	  try {
   		  UI_UPDATE_LISTENER.setServiceStateChange();
+		} catch (Exception e) {}
 	}
 	
 	@Override
 	public IBinder onBind(Intent arg0) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	
@@ -100,7 +109,7 @@ public class SyncFilesService extends Service {
 	
 	private boolean checkInternet() {
 		ConnectivityManager cm = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
-		return (cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isAvailable() && !MAIN_ACTIVITY.PREFS_ONLY_WIFI) || 
+		return (cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isAvailable() && !PREFS_ONLY_WIFI) || 
 		  cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isAvailable();
 	}
 	
@@ -111,7 +120,7 @@ public class SyncFilesService extends Service {
 		int retry = RETRY_COUNT;
 		while (retry > 0) {
 			try {
-		    	WualaDirectoryReader dr = new WualaDirectoryReader(MAIN_ACTIVITY.PREFS_WUALA_URL, MAIN_ACTIVITY.PREFS_WUALA_KEY);
+		    	WualaDirectoryReader dr = new WualaDirectoryReader(PREFS_WUALA_URL, PREFS_WUALA_KEY);
 		    	dr.setDB(db);
 		    	dr.setDstPath(dstPath);
 		    	dr.setMainService(this);
@@ -140,7 +149,7 @@ public class SyncFilesService extends Service {
 				//Log.d(LOG_TAG, "Local file from db: "+localFiles.get(i));				
 				if (!f.exists()) {
 					removedFiles.add(localFiles.get(i));
-				} else if (!db.existsInWuala(localFiles.get(i)) && MAIN_ACTIVITY.PREFS_WUALA_DELETE) {
+				} else if (!db.existsInWuala(localFiles.get(i)) && PREFS_WUALA_DELETE) {
 					f.delete();
 					Log.d(LOG_TAG, "Deleted file: "+localFiles.get(i));
 					removedFiles.add(localFiles.get(i));
@@ -153,9 +162,56 @@ public class SyncFilesService extends Service {
 		}
 	}
 	
+    private void readPrefs() {
+    	boolean changed = false;
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        
+        String url = preferences.getString("wualaURL", "");
+        String key = preferences.getString("wualaKey", "");
+        String interval = preferences.getString("serviceSyncInterval", "60");
+
+    	PREFS_WUALA_DELETE = preferences.getBoolean("allowDelete", false);
+    	PREFS_ONLY_WIFI = preferences.getBoolean("onlyWifi", true);
+    	try {
+    		PREFS_WUALA_INTERVAL = Integer.parseInt(interval);
+    	} catch (Exception e) {
+    		PREFS_WUALA_INTERVAL = 60;
+    	}
+        
+        if (url.contains("?key=")) {
+        	int i = url.lastIndexOf("?key=");
+        	key = url.substring(i+5);
+        	url = url.substring(0, i);
+        	changed = true;
+        }
+        
+        if (url.startsWith("http://") && !key.equals("")) {
+        	url = url.replace("http://", "https://");
+        	changed = true;        	
+        }
+        
+        if (url.contains(" ")) {
+        	url = url.replace(" ", "");
+        	changed = true;        	
+        }
+        
+        if (changed) {        	
+        	Editor e = preferences.edit();
+        	e.putString("wualaURL", url);
+        	e.putString("wualaKey", key);
+        	e.commit();
+        }
+
+        PREFS_WUALA_URL = url;    	
+        PREFS_WUALA_KEY = key;   	
+    }
+	
 	private void executeTask() {
-		if (MAIN_ACTIVITY.PREFS_WUALA_URL.equals("") && UI_UPDATE_LISTENER != null) {
-			UI_UPDATE_LISTENER.setNotConfigured();
+		readPrefs();
+		if (PREFS_WUALA_URL.equals("")) {
+			try {
+				UI_UPDATE_LISTENER.setNotConfigured();
+			} catch (Exception e) {}
 			Log.e(LOG_TAG, "Cannot execute task, not configured");			
 		} else
 		if (isStorageAvailableAndWritable() && checkInternet() && !executionRunning) {
@@ -164,26 +220,29 @@ public class SyncFilesService extends Service {
 				Log.i(LOG_TAG, "Task execution started");
 				db = new DataHelper(this);
 	    		dstPath.mkdirs();
-	    		if (UI_UPDATE_LISTENER != null)
+	    		//
+	    		try {
 	    			UI_UPDATE_LISTENER.setPreparing();
+				} catch (Exception e) {}
 				readWualaFiles();
-				if (UI_UPDATE_LISTENER != null)
+				try {
 					UI_UPDATE_LISTENER.setMaxFiles(wf.size());
+				} catch (Exception e) {}
 				checkLocalFiles();
 				for (int i = 0; i < wf.size(); i++) {
 					if (cancelRecieved || !isStorageAvailableAndWritable() || !checkInternet())
 						break;
-					if (UI_UPDATE_LISTENER != null) {
+					try {
 						UI_UPDATE_LISTENER.setCurrentFile(i+1);
 						UI_UPDATE_LISTENER.setFilename(wf.get(i).toString());
-					}
+					} catch (Exception e) {}
 					wf.get(i).setMainService(this);
 					int retry = RETRY_COUNT;
 					while (retry > 0) {
 						if (cancelRecieved || !isStorageAvailableAndWritable() || !checkInternet())
 							break;
 						try {
-			        		String createdFileName = wf.get(i).syncFile(dstPath.getPath(), MAIN_ACTIVITY.PREFS_WUALA_KEY);
+			        		String createdFileName = wf.get(i).syncFile(dstPath.getPath(), PREFS_WUALA_KEY);
 			        		if (!createdFileName.equals(""))
 			        			db.insert(createdFileName);
 							retry = 0;
@@ -206,23 +265,28 @@ public class SyncFilesService extends Service {
 				db.close();
 			}
 			executionRunning = false;
-			if (UI_UPDATE_LISTENER != null)
+			try {
 				UI_UPDATE_LISTENER.setNotActive();
-		} else if (UI_UPDATE_LISTENER != null) {
+			} catch (Exception e) {}
+		} else {
 			if (!executionRunning) {
-				UI_UPDATE_LISTENER.setCannotExecute();
+				try {
+					UI_UPDATE_LISTENER.setCannotExecute();
+				} catch (Exception e) {}
 				Log.e(LOG_TAG, "Cannot execute task, no SD or internet");
 			} else {
 				Log.i(LOG_TAG, "Cannot execute task, already running");				
 			}
 		}
+		wf.clear();
 	}
 	
 	///////////////////////////////////////////
 	private void startService() {
 		if (!executionRunning) {
 			cancelRecieved = false;
-			timer.schedule(mainTask, 0, MAIN_ACTIVITY.PREFS_WUALA_INTERVAL*60*1000);
+			readPrefs();
+			timer.schedule(mainTask, 0, PREFS_WUALA_INTERVAL*60*1000);
 			reqTimer.schedule(reqTask, 10000, 10000);
 			Log.i(LOG_TAG, "Service started");
 		} else {
@@ -237,14 +301,15 @@ public class SyncFilesService extends Service {
 			timer.cancel();
 		if (reqTimer != null)
 			reqTimer.cancel();
-		if (UI_UPDATE_LISTENER != null)
+		try {
 			UI_UPDATE_LISTENER.setStopping();
+		} catch (Exception e) {}
 		Log.i(LOG_TAG, "Service stopped");
 	}
 	
-	public static void setMainActivity(SyncFiles s) {
+	/*public static void setMainActivity(SyncFiles s) {
 		MAIN_ACTIVITY = s;
-	}
+	}*/
 	
 	public static void setUIUpdaterListener(SyncFilesUIUpdaterListener l) {
 		UI_UPDATE_LISTENER = l;

@@ -10,9 +10,6 @@ import android.view.View;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.preference.PreferenceManager;
 import android.widget.ToggleButton;
 
 
@@ -27,12 +24,6 @@ public class SyncFiles extends Activity {
 	private String progressMessage = "Not active";
 	private String progressTitle = "Syncing files";
 	private SyncFiles CURRENT_ACTIVITY;
-	//
-	protected String PREFS_WUALA_URL = "";
-	protected String PREFS_WUALA_KEY = "";
-	protected boolean PREFS_WUALA_DELETE = false;
-	protected int PREFS_WUALA_INTERVAL = 60;
-	protected boolean PREFS_ONLY_WIFI = true;
 	
     /** Called when the activity is first created. */
     @Override
@@ -106,7 +97,6 @@ public class SyncFiles extends Activity {
     protected void onResume() {
     	super.onRestart();
 		serviceButton.setChecked(SyncFilesService.isServiceRunning());
-        readPrefs();
     }
     
     @Override
@@ -117,7 +107,7 @@ public class SyncFiles extends Activity {
     
     private void startService() {
     	try {
-			SyncFilesService.setMainActivity(this);
+			//SyncFilesService.setMainActivity(this);
 			Intent svc = new Intent(this, SyncFilesService.class);
 			startService(svc);
     	} catch (Exception e) {
@@ -155,51 +145,7 @@ public class SyncFiles extends Activity {
         default: 
         }
     }
-    
-    private void readPrefs() {
-    	boolean changed = false;
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        
-        String url = preferences.getString("wualaURL", "");
-        String key = preferences.getString("wualaKey", "");
-        String interval = preferences.getString("serviceSyncInterval", "60");
-
-    	PREFS_WUALA_DELETE = preferences.getBoolean("allowDelete", false);
-    	PREFS_ONLY_WIFI = preferences.getBoolean("onlyWifi", true);
-    	try {
-    		PREFS_WUALA_INTERVAL = Integer.parseInt(interval);
-    	} catch (Exception e) {
-    		PREFS_WUALA_INTERVAL = 60;
-    	}
-        
-        if (url.contains("?key=")) {
-        	int i = url.lastIndexOf("?key=");
-        	key = url.substring(i+5);
-        	url = url.substring(0, i);
-        	changed = true;
-        }
-        
-        if (url.startsWith("http://") && !key.equals("")) {
-        	url = url.replace("http://", "https://");
-        	changed = true;        	
-        }
-        
-        if (url.contains(" ")) {
-        	url = url.replace(" ", "");
-        	changed = true;        	
-        }
-        
-        if (changed) {        	
-        	Editor e = preferences.edit();
-        	e.putString("wualaURL", url);
-        	e.putString("wualaKey", key);
-        	e.commit();
-        }
-
-        PREFS_WUALA_URL = url;    	
-        PREFS_WUALA_KEY = key;   	
-    }
-    		
+        		
     public void serviceButtonClickHandler(View view) {
     	if (serviceButton.isChecked() && !SyncFilesService.isServiceRunning()) {
     		startService();
