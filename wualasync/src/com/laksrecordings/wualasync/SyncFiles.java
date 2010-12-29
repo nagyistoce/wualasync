@@ -63,11 +63,6 @@ public class SyncFiles extends Activity {
 		t.setText("Last start: "+preferences.getString("lastExecStart", "Not executed"));
 		TextView t2 = (TextView)findViewById(R.id.TextView04);
 		t2.setText("Last finish: "+preferences.getString("lastExec", "Not executed"));
-		// Set button
-		Button b = (Button)findViewById(R.id.Button04);
-		b.setEnabled(isServiceEnabled);
-		Button b2 = (Button)findViewById(R.id.Button01);
-		b2.setEnabled(isServiceEnabled);
     }
     
     private boolean readIsServiceEnabled() {

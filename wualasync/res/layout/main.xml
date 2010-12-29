@@ -9,8 +9,8 @@
 
 <TextView android:text="@+id/TextView03" android:id="@+id/TextView03" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
 <TextView android:text="@+id/TextView04" android:id="@+id/TextView04" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-<Button android:text="Show sync progress" android:id="@+id/Button01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:onClick="showSyncButtonClickHandler"></Button>
-<Button android:text="Execute" android:id="@+id/Button04" android:layout_height="wrap_content" android:onClick="execSyncButtonClickHandler" android:layout_width="match_parent"></Button>
+<Button android:text="Show progress" android:id="@+id/Button01" android:layout_height="wrap_content" android:onClick="showSyncButtonClickHandler" android:layout_width="match_parent"></Button>
+<Button android:text="Synchronize" android:id="@+id/Button04" android:layout_height="wrap_content" android:onClick="execSyncButtonClickHandler" android:layout_width="wrap_content"></Button>
 
 
 </LinearLayout>

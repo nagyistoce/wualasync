@@ -47,8 +47,9 @@ public class InitExecutionService extends Service {
 	public int onStartCommand(Intent i, int flags, int startId) {
 		Bundle b = i.getExtras();
     	Intent intent = new Intent(this, ExecuteBroadcastReciever.class);
-    	PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+    	PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 0);
     	AlarmManager am = (AlarmManager)getSystemService(ALARM_SERVICE);
+		am.cancel(pi);
 		if (b.getInt("action") == ADD_ACTION) {
 			// Add schedule
 			if (isServiceEnabled()) {
@@ -58,10 +59,10 @@ public class InitExecutionService extends Service {
 		    		if (SyncFilesService.isExecutionRunning() || delayStartup) {
 		    			cal.add(Calendar.MINUTE, 5);
 		    		} else {
-		    			cal.add(Calendar.SECOND, 10);	    			
+		    			cal.add(Calendar.MINUTE, 1);	    			
 		    		}
 			    	am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), getInterval(), pi);
-					Log.d(LOG_TAG, "Scheduling sync task finished");
+					Log.d(LOG_TAG, "Scheduling sync task finished, next exec "+cal.getTime().toLocaleString());
 		    	} catch (Exception e) {
 		    		Log.e(LOG_TAG, "Error while enabling timer", e);
 		    	}			
@@ -69,7 +70,6 @@ public class InitExecutionService extends Service {
 			delayStartup = false;
 		} else {
 			// Delete schedule
-			am.cancel(pi);
 			Log.d(LOG_TAG, "Sync task schedule deleted");
 		}
 		this.stopSelf(startId);
