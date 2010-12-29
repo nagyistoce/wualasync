@@ -96,7 +96,7 @@ public class WualaFile {
 		        while ((len1 = is.read(buffer)) != -1) {
 		            fos.write(buffer, 0, len1);
 		            // Check for cancel signal
-		            if (MAIN_SERVICE != null && MAIN_SERVICE.cancelRecieved)
+		            if (SyncFilesService.cancelRecieved)
 				        throw new RuntimeException("Cancel recieved from main service");
 		        }
 		        fos.close();

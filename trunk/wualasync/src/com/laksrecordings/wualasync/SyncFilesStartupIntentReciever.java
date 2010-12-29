@@ -9,8 +9,9 @@ public class SyncFilesStartupIntentReciever extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context arg0, Intent arg1) {
 		// Startup service
-		SyncFilesService.thisIsDeviceStartup();
-		Intent svc = new Intent(arg0, SyncFilesService.class);
+		InitExecutionService.delayStartup = true;
+		Intent svc = new Intent(arg0, InitExecutionService.class);
+		svc.putExtra("action", InitExecutionService.ADD_ACTION);
 		arg0.startService(svc);
 	}
 
