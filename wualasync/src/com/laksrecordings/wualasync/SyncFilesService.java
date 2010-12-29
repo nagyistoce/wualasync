@@ -11,8 +11,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Date;
 
 public class SyncFilesService extends Service {
 	private static final int RETRY_COUNT = 5;
@@ -21,56 +20,54 @@ public class SyncFilesService extends Service {
 	private String LOG_TAG = getClass().getSimpleName();
 	private File dstPath;
 	private ArrayList<WualaFile> wf = new ArrayList<WualaFile>();
-	protected boolean cancelRecieved = false;
+	protected static boolean cancelRecieved = false;
 	private static boolean executionRunning = false;
-	private static boolean executionRequested = false;
-	private static boolean serviceRunning = false;
-	private static boolean executedOnStartup = false;
 	//
 	private String PREFS_WUALA_URL = "";
 	private String PREFS_WUALA_KEY = "";
 	private boolean PREFS_WUALA_DELETE = false;
-	private int PREFS_WUALA_INTERVAL = 60;
 	private boolean PREFS_ONLY_WIFI = true;
-	private boolean PREFS_START_ON_BOOT = false;
-	//
-	private Timer timer = new Timer();
-	private Timer reqTimer = new Timer();
-	private TimerTask mainTask = new TimerTask() {
-		public void run() {
-			executionRequested = false;
-			executeTask();
-		}
-	};
-	private TimerTask reqTask = new TimerTask() {
-		public void run() {
-			if (!executionRunning && executionRequested)
-				mainTask.run();
-		}
-	};
 	//
 	private static SyncFilesUIUpdaterListener UI_UPDATE_LISTENER;
-	//private static SyncFiles MAIN_ACTIVITY;
+	protected static int progressMax = 0;
+	protected static int progressCurrent = 0;
+	protected static String progressMessage = "Not active";
+	protected static String progressTitle = "Syncing files";
 
     ///////////////////////////////////////////
 	// Service control functions
     ///////////////////////////////////////////
 	
 	@Override public void onCreate() {
-	  super.onCreate();
-	  // init the service here
-	  serviceRunning = true;
-  	  dstPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-	  startService();
+		super.onCreate();
+	}
+	
+	public void onLowMemory () {
+		Log.i(LOG_TAG, "Low memory signalled");
+		super.onLowMemory();
+	}
+	
+	public int onStartCommand(Intent i, int flags, int startId) {
+	  	dstPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+		if (!executionRunning) {
+			cancelRecieved = false;
+			readPrefs();
+			RunnableThread t = new RunnableThread();
+			t.start();
+			//executeTask();
+		} else {
+			Log.e(LOG_TAG, "Service not started, execution was still running");
+		}
+		this.stopSelf();
+		return START_NOT_STICKY;
 	}
 
 	@Override public void onDestroy() {
-	  super.onDestroy();
-	  shutdownService();
-	  serviceRunning = false;
-  	  try {
-  		  UI_UPDATE_LISTENER.setServiceStateChange();
-		} catch (Exception e) {}
+		super.onDestroy();
+		//cancelRecieved = true;
+		setStopping();
+		Log.i(LOG_TAG, "Service stopped");
+		setServiceStateChange();
 	}
 	
 	@Override
@@ -78,21 +75,14 @@ public class SyncFilesService extends Service {
 		return null;
 	}
 	
-	public static void requestExecution() {
-		if (!executionRunning)
-			executionRequested = true;
-	}
-	
-	public static boolean isServiceRunning() {
-		return serviceRunning;
-	}
-	
-	public static void thisIsDeviceStartup() {
-		executedOnStartup = true;
-	}
-
 	///////////////////////////////////////////
-
+	private class RunnableThread extends Thread {
+		public void run() {
+			executeTask();
+		}
+	}
+	///////////////////////////////////////////
+	
 	private boolean isStorageAvailableAndWritable() {
     	boolean mExternalStorageAvailable = false;
     	boolean mExternalStorageWriteable = false;
@@ -129,7 +119,6 @@ public class SyncFilesService extends Service {
 		    	WualaDirectoryReader dr = new WualaDirectoryReader(PREFS_WUALA_URL, PREFS_WUALA_KEY);
 		    	dr.setDB(db);
 		    	dr.setDstPath(dstPath);
-		    	dr.setMainService(this);
 		    	wf = dr.read();
 		    	retry = 0;
 			} catch (Exception e) {
@@ -168,22 +157,26 @@ public class SyncFilesService extends Service {
 		}
 	}
 	
-    private void readPrefs() {
+    private void writeLastExecutionTime(boolean isStart) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    	Editor e = preferences.edit();
+    	Date date = new Date();
+    	if (isStart)
+    		e.putString("lastExecStart", date.toLocaleString());
+    	else
+    		e.putString("lastExec", date.toLocaleString());
+    	e.commit();    	
+    }
+    
+	private void readPrefs() {
     	boolean changed = false;
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         
         String url = preferences.getString("wualaURL", "");
         String key = preferences.getString("wualaKey", "");
-        String interval = preferences.getString("serviceSyncInterval", "60");
 
     	PREFS_WUALA_DELETE = preferences.getBoolean("allowDelete", false);
     	PREFS_ONLY_WIFI = preferences.getBoolean("onlyWifi", true);
-    	PREFS_START_ON_BOOT = preferences.getBoolean("startupOnBoot", false);
-    	try {
-    		PREFS_WUALA_INTERVAL = Integer.parseInt(interval);
-    	} catch (Exception e) {
-    		PREFS_WUALA_INTERVAL = 60;
-    	}
         
         if (url.contains("?key=")) {
         	int i = url.lastIndexOf("?key=");
@@ -214,11 +207,9 @@ public class SyncFilesService extends Service {
     }
 	
 	private void executeTask() {
-		readPrefs();
+		writeLastExecutionTime(true);
 		if (PREFS_WUALA_URL.equals("")) {
-			try {
-				UI_UPDATE_LISTENER.setNotConfigured();
-			} catch (Exception e) {}
+			setNotConfigured();
 			Log.e(LOG_TAG, "Cannot execute task, not configured");			
 		} else
 		if (isStorageAvailableAndWritable() && checkInternet() && !executionRunning) {
@@ -228,21 +219,15 @@ public class SyncFilesService extends Service {
 				db = new DataHelper(this);
 	    		dstPath.mkdirs();
 	    		//
-	    		try {
-	    			UI_UPDATE_LISTENER.setPreparing();
-				} catch (Exception e) {}
+	    		setPreparing();
 				readWualaFiles();
-				try {
-					UI_UPDATE_LISTENER.setMaxFiles(wf.size());
-				} catch (Exception e) {}
+				setMaxFiles(wf.size());
 				checkLocalFiles();
 				for (int i = 0; i < wf.size(); i++) {
 					if (cancelRecieved || !isStorageAvailableAndWritable() || !checkInternet())
 						break;
-					try {
-						UI_UPDATE_LISTENER.setCurrentFile(i+1);
-						UI_UPDATE_LISTENER.setFilename(wf.get(i).toString());
-					} catch (Exception e) {}
+					setCurrentFile(i+1);
+					setFilename(wf.get(i).toString());
 					wf.get(i).setMainService(this);
 					int retry = RETRY_COUNT;
 					while (retry > 0) {
@@ -266,20 +251,17 @@ public class SyncFilesService extends Service {
 					}
 				}
 				db.close();
+				writeLastExecutionTime(false);
 				Log.i(LOG_TAG, "Task execution finished");
 			} catch (Exception e) {
 				Log.e(LOG_TAG, "Task execution failed: "+e.getMessage());
 				db.close();
 			}
 			executionRunning = false;
-			try {
-				UI_UPDATE_LISTENER.setNotActive();
-			} catch (Exception e) {}
+			setNotActive();
 		} else {
 			if (!executionRunning) {
-				try {
-					UI_UPDATE_LISTENER.setCannotExecute();
-				} catch (Exception e) {}
+				setCannotExecute();
 				Log.e(LOG_TAG, "Cannot execute task, no SD or internet");
 			} else {
 				Log.i(LOG_TAG, "Cannot execute task, already running");				
@@ -289,39 +271,69 @@ public class SyncFilesService extends Service {
 	}
 	
 	///////////////////////////////////////////
-	private void startService() {
-		if (!executionRunning) {
-			cancelRecieved = false;
-			readPrefs();
-			if (!executedOnStartup || (executedOnStartup && PREFS_START_ON_BOOT)) {
-				timer.schedule(mainTask, 0, PREFS_WUALA_INTERVAL*60*1000);
-				reqTimer.schedule(reqTask, 10000, 10000);
-				Log.i(LOG_TAG, "Service started");
-			} else {
-				Log.i(LOG_TAG, "Service not allowed to start on boot");				
-				this.stopSelf();
-			}
-			executedOnStartup = false;
-		} else {
-			Log.e(LOG_TAG, "Service not started, execution was still running");
-			this.stopSelf();
-		}
-	}
-
-	private void shutdownService() {
-		cancelRecieved = true;
-		if (timer != null)
-			timer.cancel();
-		if (reqTimer != null)
-			reqTimer.cancel();
+	private void updateProgress() {
 		try {
-			UI_UPDATE_LISTENER.setStopping();
+			if (UI_UPDATE_LISTENER != null)
+				UI_UPDATE_LISTENER.updateProgress();
 		} catch (Exception e) {}
-		Log.i(LOG_TAG, "Service stopped");
+	}
+	public void setFilename(String filename) {
+		progressMessage = filename;
+		updateProgress();
+	}
+	public void setMaxFiles(int maxFiles) {
+		progressMax = maxFiles;
+		updateProgress();
+	}
+	public void setCurrentFile(int currentFile) {
+		progressCurrent = currentFile;
+		updateProgress();
+	}
+	public void setPreparing() {
+		progressCurrent = 0;
+		progressMax = 0;
+		progressMessage = "Preparing";
+		updateProgress();        		
+	}
+	public void setNotActive() {
+		progressCurrent = 0;
+		progressMax = 0;
+		progressMessage = "Not active";
+		updateProgress();
+	}
+	public void setStopping() {
+		progressCurrent = 0;
+		progressMax = 0;
+		progressMessage = "Stopping";
+		updateProgress();
+	}
+	public void setCannotExecute() {
+		progressCurrent = 0;
+		progressMax = 0;
+		progressMessage = "Cannot execute, no SD card or internet";
+		updateProgress();        		
+	}
+	public void setNotConfigured() {
+		progressCurrent = 0;
+		progressMax = 0;
+		progressMessage = "Application is not configured";
+		updateProgress();        		
+	}
+	public void setServiceStateChange() {
+		updateProgress();        		        		
 	}
 	
+	///////////////////////////////////////////
 	public static void setUIUpdaterListener(SyncFilesUIUpdaterListener l) {
 		UI_UPDATE_LISTENER = l;
+	}
+	
+	public static void cancelExecution() {
+		cancelRecieved = true;
+	}
+	
+	public static boolean isExecutionRunning() {
+		return executionRunning;
 	}
 	
 }

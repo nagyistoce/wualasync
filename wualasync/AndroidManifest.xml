@@ -20,6 +20,8 @@
 <category android:name="android.intent.category.HOME" />
 </intent-filter>
 </receiver>
+<receiver android:process=":remote" android:name="ExecuteBroadcastReciever"></receiver>
+<service android:name="InitExecutionService"></service>
 </application>
 <uses-sdk android:minSdkVersion="8" /> 
 

@@ -7,9 +7,10 @@
 <TextView android:text="Wuala sync client" android:id="@+id/TextView02" android:textSize="25sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:typeface="serif"></TextView>
 <TextView android:text="NB! Please note, that changes made in the Wuala client will take some time to reach the Wuala web server! So please wait at least 10-15 minutes before synchronizing. Also, if you just shared a folder with a key, it would take even longer to reach the web servers, so please test your folder link in browser before trying to sync it for the first time." android:id="@+id/TextView01" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
 
+<TextView android:text="@+id/TextView03" android:id="@+id/TextView03" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+<TextView android:text="@+id/TextView04" android:id="@+id/TextView04" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
 <Button android:text="Show sync progress" android:id="@+id/Button01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:onClick="showSyncButtonClickHandler"></Button>
-<Button android:text="Execute" android:id="@+id/Button04" android:layout_width="wrap_content" android:layout_height="wrap_content" android:onClick="execSyncButtonClickHandler"></Button>
+<Button android:text="Execute" android:id="@+id/Button04" android:layout_height="wrap_content" android:onClick="execSyncButtonClickHandler" android:layout_width="match_parent"></Button>
 
-<ToggleButton android:textOn="Service started" android:textOff="Service stopped" android:id="@+id/ToggleButton01" android:layout_width="match_parent" android:layout_height="wrap_content"  android:onClick="serviceButtonClickHandler"></ToggleButton>
 
 </LinearLayout>

@@ -2,6 +2,7 @@ package com.laksrecordings.wualasync;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
@@ -10,83 +11,35 @@ import android.view.View;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.widget.ToggleButton;
-
+import android.content.SharedPreferences;
+import android.widget.TextView;
+import android.widget.Button;
+import android.content.DialogInterface;
 
 public class SyncFiles extends Activity {
 	private static final int PROGRESS_DIALOG = 0;
     private ProgressDialog progressDialog;
-    private ToggleButton serviceButton;
 	private String LOG_TAG = getClass().getSimpleName();
 	//
-	private int progressMax = 0;
-	private int progressCurrent = 0;
-	private String progressMessage = "Not active";
-	private String progressTitle = "Syncing files";
 	private SyncFiles CURRENT_ACTIVITY;
+	private boolean isServiceEnabled = false;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        isServiceEnabled = readIsServiceEnabled();
         CURRENT_ACTIVITY = this;
-        serviceButton = (ToggleButton)findViewById(R.id.ToggleButton01);
         SyncFilesService.setUIUpdaterListener(new SyncFilesUIUpdaterListener() {
-        	public void setFilename(String filename) {
-        		progressMessage = filename;
-        		updateProgress();
-        	}
-        	public void setMaxFiles(int maxFiles) {
-        		progressMax = maxFiles;
-        		updateProgress();
-        	}
-        	public void setCurrentFile(int currentFile) {
-        		progressCurrent = currentFile;
-        		updateProgress();
-        	}
-        	public void setPreparing() {
-        		progressCurrent = 0;
-        		progressMax = 0;
-        		progressMessage = "Preparing";
-        		updateProgress();        		
-        	}
-        	public void setNotActive() {
-        		progressCurrent = 0;
-        		progressMax = 0;
-        		progressMessage = "Not active";
-        		updateProgress();
-        	}
-        	public void setStopping() {
-        		progressCurrent = 0;
-        		progressMax = 0;
-        		progressMessage = "Stopping";
-        		updateProgress();
-        	}
-        	public void setCannotExecute() {
-        		progressCurrent = 0;
-        		progressMax = 0;
-        		progressMessage = "Cannot execute, no SD card or internet";
-        		updateProgress();        		
-        	}
-        	public void setNotConfigured() {
-        		progressCurrent = 0;
-        		progressMax = 0;
-        		progressMessage = "Application is not configured";
-        		updateProgress();        		
-        	}
-        	public void setServiceStateChange() {
-        		serviceButton.setChecked(SyncFilesService.isServiceRunning());
-        		updateProgress();        		        		
-        	}
-        	private void updateProgress() {
+        	public void updateProgress() {
         		CURRENT_ACTIVITY.runOnUiThread(new Runnable() {
         			public void run() {
         				if (progressDialog != null) {
-	        				progressDialog.setMessage(progressMessage);
-	        				progressDialog.setTitle(progressTitle);
-	        				progressDialog.setProgress(progressCurrent);
-	        				progressDialog.setMax(progressMax);
+	        				progressDialog.setMessage(SyncFilesService.progressMessage);
+	        				progressDialog.setTitle(SyncFilesService.progressTitle);
+	        				progressDialog.setProgress(SyncFilesService.progressCurrent);
+	        				progressDialog.setMax(SyncFilesService.progressMax);
         				}
         			}
         		});        		
@@ -94,21 +47,38 @@ public class SyncFiles extends Activity {
         });
     }
     
-    protected void onResume() {
-    	super.onRestart();
-		serviceButton.setChecked(SyncFilesService.isServiceRunning());
+    protected void onStart() {
+    	super.onStart();
+    	boolean newServiceEnabled = readIsServiceEnabled();
+    	if (isServiceEnabled != newServiceEnabled) {
+    		if (newServiceEnabled)
+    			startService();
+    		else
+    			stopService();
+    	}
+    	isServiceEnabled = newServiceEnabled;
+    	// Show last execution time
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		TextView t = (TextView)findViewById(R.id.TextView03);
+		t.setText("Last start: "+preferences.getString("lastExecStart", "Not executed"));
+		TextView t2 = (TextView)findViewById(R.id.TextView04);
+		t2.setText("Last finish: "+preferences.getString("lastExec", "Not executed"));
+		// Set button
+		Button b = (Button)findViewById(R.id.Button04);
+		b.setEnabled(isServiceEnabled);
+		Button b2 = (Button)findViewById(R.id.Button01);
+		b2.setEnabled(isServiceEnabled);
     }
     
-    @Override
-    protected void onDestroy() {
-    	super.onDestroy();
-    	stopService();
+    private boolean readIsServiceEnabled() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    	return preferences.getBoolean("enableService", false);
     }
     
     private void startService() {
     	try {
-			//SyncFilesService.setMainActivity(this);
-			Intent svc = new Intent(this, SyncFilesService.class);
+			Intent svc = new Intent(this, InitExecutionService.class);
+			svc.putExtra("action", InitExecutionService.ADD_ACTION);
 			startService(svc);
     	} catch (Exception e) {
    		    Log.e(LOG_TAG, "Service creation problem", e);
@@ -116,8 +86,13 @@ public class SyncFiles extends Activity {
     }
 
     private void stopService() {
-		Intent svc = new Intent(this, SyncFilesService.class);
-		stopService(svc);
+    	try {
+			Intent svc = new Intent(this, InitExecutionService.class);
+			svc.putExtra("action", InitExecutionService.DELETE_ACTION);
+			startService(svc);
+    	} catch (Exception e) {
+    		Log.e(LOG_TAG, "Error while cancelling service", e);
+    	}
     }
 
     protected Dialog onCreateDialog(int id) {
@@ -125,9 +100,15 @@ public class SyncFiles extends Activity {
         case PROGRESS_DIALOG:
             progressDialog = new ProgressDialog(SyncFiles.this);
             progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progressDialog.setMessage(progressMessage);
-            progressDialog.setTitle(progressTitle);
+            progressDialog.setMessage(SyncFilesService.progressMessage);
+            progressDialog.setTitle(SyncFilesService.progressTitle);
             progressDialog.setCancelable(true);
+            progressDialog.setButton("Cancel execution", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                    	if (SyncFilesService.isExecutionRunning())
+                    		SyncFilesService.cancelExecution();
+                    }
+            });
             return progressDialog;
         default: 
             return null;
@@ -138,32 +119,22 @@ public class SyncFiles extends Activity {
         switch(id) {
 	        case PROGRESS_DIALOG:
 	        	ProgressDialog pd = (ProgressDialog)d;
-			    pd.setMessage(progressMessage);
-			    pd.setTitle(progressTitle);
-			    pd.setProgress(progressCurrent);
-			    pd.setMax(progressMax);
+			    pd.setMessage(SyncFilesService.progressMessage);
+			    pd.setTitle(SyncFilesService.progressTitle);
+			    pd.setProgress(SyncFilesService.progressCurrent);
+			    pd.setMax(SyncFilesService.progressMax);
         default: 
         }
     }
         		
-    public void serviceButtonClickHandler(View view) {
-    	if (serviceButton.isChecked() && !SyncFilesService.isServiceRunning()) {
-    		startService();
-        	showSyncButtonClickHandler(view);
-    	} else if (!serviceButton.isChecked() && SyncFilesService.isServiceRunning()) {
-        	stopService();    		
-    	} else {
-    		serviceButton.setChecked(SyncFilesService.isServiceRunning());
-    		Log.d(LOG_TAG, "Service state and button state did not match");
-    	}
-    }
-    
 	public void showSyncButtonClickHandler(View view) {
 		showDialog(PROGRESS_DIALOG);
 	}
 
 	public void execSyncButtonClickHandler(View view) {
-		SyncFilesService.requestExecution();
+		//startService();
+		Intent svc = new Intent(this, SyncFilesService.class);
+		this.startService(svc);
     	showSyncButtonClickHandler(view);		
 	}
     
