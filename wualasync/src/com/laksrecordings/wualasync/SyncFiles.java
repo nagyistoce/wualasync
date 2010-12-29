@@ -44,6 +44,7 @@ public class SyncFiles extends Activity {
 	        				progressDialog.setTitle(SyncFilesService.progressTitle);
 	        				progressDialog.setProgress(SyncFilesService.progressCurrent);
 	        				progressDialog.setMax(SyncFilesService.progressMax);
+	        				progressDialog.setSecondaryProgress(SyncFilesService.progressSecondary);
         				}
         			}
         		});        		

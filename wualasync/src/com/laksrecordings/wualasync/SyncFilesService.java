@@ -32,6 +32,7 @@ public class SyncFilesService extends Service {
 	private static SyncFilesUIUpdaterListener UI_UPDATE_LISTENER;
 	protected static int progressMax = 0;
 	protected static int progressCurrent = 0;
+	protected static int progressSecondary = 0;
 	protected static String progressMessage = "Not active";
 	protected static String progressTitle = "Syncing files";
 
@@ -271,55 +272,67 @@ public class SyncFilesService extends Service {
 	}
 	
 	///////////////////////////////////////////
-	private void updateProgress() {
+	protected void updateProgress() {
 		try {
 			if (UI_UPDATE_LISTENER != null)
 				UI_UPDATE_LISTENER.updateProgress();
 		} catch (Exception e) {}
 	}
-	public void setFilename(String filename) {
+	protected void setFilename(String filename) {
 		progressMessage = filename;
 		updateProgress();
 	}
-	public void setMaxFiles(int maxFiles) {
+	protected void setMaxFiles(int maxFiles) {
 		progressMax = maxFiles;
 		updateProgress();
 	}
-	public void setCurrentFile(int currentFile) {
+	protected void setCurrentFile(int currentFile) {
 		progressCurrent = currentFile;
+		progressSecondary = 0;
 		updateProgress();
 	}
-	public void setPreparing() {
+	protected void setPreparing() {
 		progressCurrent = 0;
 		progressMax = 0;
 		progressMessage = "Preparing";
 		updateProgress();        		
 	}
-	public void setNotActive() {
+	protected void setNotActive() {
 		progressCurrent = 0;
 		progressMax = 0;
 		progressMessage = "Not active";
 		updateProgress();
 	}
-	public void setStopping() {
+	protected void setStopping() {
 		progressCurrent = 0;
 		progressMax = 0;
 		progressMessage = "Stopping";
 		updateProgress();
 	}
-	public void setCannotExecute() {
+	protected void setCannotExecute() {
 		progressCurrent = 0;
 		progressMax = 0;
 		progressMessage = "Cannot execute, no SD card or internet";
 		updateProgress();        		
 	}
-	public void setNotConfigured() {
+	protected void setNotConfigured() {
 		progressCurrent = 0;
 		progressMax = 0;
 		progressMessage = "Application is not configured";
 		updateProgress();        		
 	}
-	public void setServiceStateChange() {
+	protected void setSecondary(long filesize, long done) {
+		int newSecondary = 0;
+		if (filesize > 0) {
+			float f = done*progressMax/filesize;
+			newSecondary = Math.round(f);
+		}
+		if (progressSecondary != newSecondary) {
+			progressSecondary = newSecondary;
+			updateProgress();
+		}
+	}
+	protected void setServiceStateChange() {
 		updateProgress();        		        		
 	}
 	

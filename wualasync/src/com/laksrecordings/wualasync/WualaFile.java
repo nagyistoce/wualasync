@@ -93,8 +93,13 @@ public class WualaFile {
 
 		        byte[] buffer = new byte[1024];
 		        int len1 = 0;
+		        long done = 0;
 		        while ((len1 = is.read(buffer)) != -1) {
 		            fos.write(buffer, 0, len1);
+		            // Send progress to main service
+		            done+= len1;
+		            if (MAIN_SERVICE != null)
+		            	MAIN_SERVICE.setSecondary(filesize, done);
 		            // Check for cancel signal
 		            if (SyncFilesService.cancelRecieved)
 				        throw new RuntimeException("Cancel recieved from main service");
