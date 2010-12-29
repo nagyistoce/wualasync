@@ -11,6 +11,20 @@ Some features provides by the application:
   * Configure Wuala web URL and key as the synchronization source
   * Files are synchronized to Music folder on the phone
   * Synchronization is only one-way! From Wuala to Android.
-  * Synchronization process runs in background, every 1 hour
-  * Graphical interface displaying synchronization progress
+  * Synchronization process runs in background, possible to schedule every 30 min, 1 hour, ... Scheduling using Android AlarmManager so it's battery-friendly.
+  * Graphical interface displaying synchronization progress and application configuration
   * Does not ask for your Wuala username or password!
+
+Configuration options:
+  * Enable service - scheduled background syncronization process
+  * Wuala shared folder URL and key
+  * Allow file deletion - if file is removed from Wuala folder, then also remove from phone
+  * Synchronization interval - if service is enabled, then how ofter the synchronization is executed
+  * Allow sync only when connected with Wifi
+
+= Installation =
+
+Click the Source tab in this website. There you can download the full source code.
+You need Android SDK and Eclipse - [http://developer.android.com/guide/developing/eclipse-adt.html Instructions]
+
+There is also fully compiled APK file, that should be directly installable to the device. [http://www.google.ee/search?q=install+apk+file+on+android Google should help with that task]
