@@ -22,13 +22,18 @@ public class SyncFiles extends Activity {
 	//
 	private SyncFiles CURRENT_ACTIVITY;
 	private boolean isServiceEnabled = false;
+	private String serviceSyncInterval = "";
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        isServiceEnabled = readIsServiceEnabled();
+        //
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        isServiceEnabled = preferences.getBoolean("enableService", false);
+        serviceSyncInterval = preferences.getString("serviceSyncInterval", "60");
+        //
         CURRENT_ACTIVITY = this;
         SyncFilesService.setUIUpdaterListener(new SyncFilesUIUpdaterListener() {
         	public void updateProgress() {
@@ -48,25 +53,26 @@ public class SyncFiles extends Activity {
     
     protected void onStart() {
     	super.onStart();
-    	boolean newServiceEnabled = readIsServiceEnabled();
+    	//
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean newServiceEnabled = preferences.getBoolean("enableService", false);
+        String newServiceSyncInterval = preferences.getString("serviceSyncInterval", "60");
+    	//
     	if (isServiceEnabled != newServiceEnabled) {
     		if (newServiceEnabled)
     			startService();
     		else
     			stopService();
+    	} else if (serviceSyncInterval != newServiceSyncInterval) {
+			startService();
     	}
     	isServiceEnabled = newServiceEnabled;
+    	serviceSyncInterval = newServiceSyncInterval;
     	// Show last execution time
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		TextView t = (TextView)findViewById(R.id.TextView03);
 		t.setText("Last start: "+preferences.getString("lastExecStart", "Not executed"));
 		TextView t2 = (TextView)findViewById(R.id.TextView04);
-		t2.setText("Last finish: "+preferences.getString("lastExec", "Not executed"));
-    }
-    
-    private boolean readIsServiceEnabled() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-    	return preferences.getBoolean("enableService", false);
+		t2.setText("Last finish: "+preferences.getString("lastExec", "Not finished"));
     }
     
     private void startService() {
