@@ -13,7 +13,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.widget.TextView;
-import android.widget.Button;
 import android.content.DialogInterface;
 
 public class SyncFiles extends Activity {
