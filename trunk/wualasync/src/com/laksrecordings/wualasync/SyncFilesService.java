@@ -7,6 +7,7 @@ import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import java.io.File;
@@ -52,22 +53,15 @@ public class SyncFilesService extends Service {
 		if (!executionRunning) {
 			cancelRecieved = false;
 			readPrefs();
-			RunnableThread t = new RunnableThread();
-			t.start();
-			//executeTask();
+			new RunnableTask().execute();
 		} else {
 			Log.e(LOG_TAG, "Service not started, execution was still running");
 		}
-		this.stopSelf();
 		return START_NOT_STICKY;
 	}
 
 	@Override public void onDestroy() {
 		super.onDestroy();
-		//cancelRecieved = true;
-		setStopping();
-		Log.i(LOG_TAG, "Service stopped");
-		setServiceStateChange();
 	}
 	
 	@Override
@@ -76,10 +70,16 @@ public class SyncFilesService extends Service {
 	}
 	
 	///////////////////////////////////////////
-	private class RunnableThread extends Thread {
-		public void run() {
+	private class RunnableTask extends AsyncTask<Void, Void, Void> {
+		@Override protected Void doInBackground(Void... params) {
 			executeTask();
+			return null;
 		}
+		
+		@Override protected void onPostExecute(Void result) {
+			stopSelf();
+		}
+ 
 	}
 	///////////////////////////////////////////
 	
