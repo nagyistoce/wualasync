@@ -46,7 +46,9 @@ public class SyncFilesService extends Service {
 	}
 	
 	public void onLowMemory () {
-		Log.i(LOG_TAG, "Low memory signalled");
+		Log.i(LOG_TAG, "Low memory signalled, cancelling task");
+		if (executionRunning)
+			cancelExecution();
 		super.onLowMemory();
 	}
 	
@@ -161,16 +163,29 @@ public class SyncFilesService extends Service {
 	private void checkLocalFiles() {
 		ArrayList<String> removedFiles = new ArrayList<String>();
 		{
+			String dstParent = dstPath.getParent();
 			ArrayList<String> localFiles = db.selectAll();
 			for (int i = 0; i < localFiles.size(); i++) {
 				File f = new File(localFiles.get(i));
-				//Log.d(LOG_TAG, "Local file from db: "+localFiles.get(i));				
+				//
 				if (!f.exists()) {
 					removedFiles.add(localFiles.get(i));
 				} else if (!db.existsInWuala(localFiles.get(i)) && PREFS_WUALA_DELETE) {
 					f.delete();
 					Log.d(LOG_TAG, "Deleted file: "+localFiles.get(i));
 					removedFiles.add(localFiles.get(i));
+					// Check all parents of this file
+					File parent = f.getParentFile();
+					while (!parent.getParent().equals(dstParent) && parent.getParent().length()-1 > dstParent.length() && 
+							parent.list().length == 0 && !parent.getPath().equals(dstPath.getPath())) {
+						if (parent.delete()) {
+							Log.d(LOG_TAG, "Deleted folder: "+parent.getPath());
+							parent = parent.getParentFile();
+						} else {
+							Log.e(LOG_TAG, "Delete folder failed: "+parent.getPath());
+							break;
+						}
+					}
 				}
 			}
 		}
