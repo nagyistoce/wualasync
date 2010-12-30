@@ -13,7 +13,7 @@
         </activity>
 
     <service android:name="SyncFilesService" android:label="WualaSyncFilesService"></service>
-<activity android:label="Preferences" android:name="Preferences"></activity>
+<activity android:label="Preferences" android:name="Preferences" android:screenOrientation="portrait"></activity>
 <receiver android:name="SyncFilesStartupIntentReciever">
 <intent-filter>
 <action android:name="android.intent.action.BOOT_COMPLETED" />

@@ -17,4 +17,20 @@
 <item>12 hours</item>
 <item>24 hours</item>
 </string-array>
+<string-array name="destination">
+<item>MUSIC</item>
+<item>PICTURES</item>
+<item>MOVIES</item>
+<item>DOWNLOADS</item>
+<item>PODCASTS</item>
+<item>custom</item>
+</string-array>
+<string-array name="destination_display">
+<item>Music</item>
+<item>Pictures</item>
+<item>Movies</item>
+<item>Downloads</item>
+<item>Podcasts</item>
+<item>WualaSync</item>
+</string-array>
 </resources>

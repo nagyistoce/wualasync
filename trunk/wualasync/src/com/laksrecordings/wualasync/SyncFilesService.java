@@ -26,6 +26,7 @@ public class SyncFilesService extends Service {
 	//
 	private String PREFS_WUALA_URL = "";
 	private String PREFS_WUALA_KEY = "";
+	private String PREFS_DESTINATION = "MUSIC";
 	private boolean PREFS_WUALA_DELETE = false;
 	private boolean PREFS_ONLY_WIFI = true;
 	//
@@ -50,10 +51,31 @@ public class SyncFilesService extends Service {
 	}
 	
 	public int onStartCommand(Intent i, int flags, int startId) {
-	  	dstPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
 		if (!executionRunning) {
 			cancelRecieved = false;
 			readPrefs();
+			
+			{ // Setting destination folder
+				String dst = "";
+				if (PREFS_DESTINATION.equals("MUSIC"))
+					dst = Environment.DIRECTORY_MUSIC;
+				else if (PREFS_DESTINATION.equals("PICTURES"))
+					dst = Environment.DIRECTORY_PICTURES;
+				else if (PREFS_DESTINATION.equals("MOVIES"))
+					dst = Environment.DIRECTORY_MOVIES;
+				else if (PREFS_DESTINATION.equals("DOWNLOADS"))
+					dst = Environment.DIRECTORY_DOWNLOADS;
+				else if (PREFS_DESTINATION.equals("PODCASTS"))
+					dst = Environment.DIRECTORY_PODCASTS;
+				
+				if (PREFS_DESTINATION.equals("custom")) {
+					dstPath = new File(Environment.getExternalStorageDirectory().getPath()+"/WualaSync");
+				} else {
+					dstPath = Environment.getExternalStoragePublicDirectory(dst);
+				}
+				Log.d(LOG_TAG, "Sync destination: "+dstPath.getPath());
+			}
+			
 			new RunnableTask().execute();
 		} else {
 			Log.e(LOG_TAG, "Service not started, execution was still running");
@@ -178,6 +200,7 @@ public class SyncFilesService extends Service {
 
     	PREFS_WUALA_DELETE = preferences.getBoolean("allowDelete", false);
     	PREFS_ONLY_WIFI = preferences.getBoolean("onlyWifi", true);
+    	PREFS_DESTINATION = preferences.getString("destPath", "MUSIC");
         
         if (url.contains("?key=")) {
         	int i = url.lastIndexOf("?key=");
