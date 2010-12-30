@@ -9,7 +9,7 @@ This application was written because I wanted to automatically synchronize my mu
 
 Some features provides by the application:
   * Configure Wuala web URL and key as the synchronization source
-  * Files are synchronized to Music folder on the phone
+  * Files are synchronized to the phones external storage device (SD card)
   * Synchronization is only one-way! From Wuala to Android.
   * Synchronization process runs in background, possible to schedule every 30 min, 1 hour, ... Scheduling using Android AlarmManager so it's battery-friendly.
   * Graphical interface displaying synchronization progress and application configuration
@@ -18,6 +18,7 @@ Some features provides by the application:
 Configuration options:
   * Enable service - scheduled background syncronization process
   * Wuala shared folder URL and key
+  * Destination folder
   * Allow file deletion - if file is removed from Wuala folder, then also remove from phone
   * Synchronization interval - if service is enabled, then how ofter the synchronization is executed
   * Allow sync only when connected with Wifi
