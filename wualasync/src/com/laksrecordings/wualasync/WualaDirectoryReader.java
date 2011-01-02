@@ -36,6 +36,7 @@ public class WualaDirectoryReader {
 		try {
 	    	URL url = new URL(wualaurl.replace("www.wuala.com", "api.wuala.com/publicFolders")+"?key="+key+"&il=1&ff=0");
 	        URLConnection conn = url.openConnection();
+	        conn.setConnectTimeout(SyncFilesService.HTTP_TIMEOUT);
 	        
 	        RootElement root = new RootElement("result");
 	        Element publicFolders = root.getChild("publicFolders");
@@ -62,6 +63,7 @@ public class WualaDirectoryReader {
         try {
 	    	URL url = new URL(wualaurl.replace("www.wuala.com", "api.wuala.com/publicFiles")+"?key="+key+"&il=1&ff=0");
 	        URLConnection conn = url.openConnection();
+	        conn.setConnectTimeout(SyncFilesService.HTTP_TIMEOUT);
 	        
 	        RootElement root = new RootElement("result");
 	        Element publicFiles = root.getChild("publicFiles");

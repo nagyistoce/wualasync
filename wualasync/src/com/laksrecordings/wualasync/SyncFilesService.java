@@ -17,6 +17,7 @@ import java.util.Date;
 public class SyncFilesService extends Service {
 	private static final int RETRY_COUNT = 5;
 	private static final int SLEEP_ON_FAIL = 5000;
+	protected static final int HTTP_TIMEOUT = 10000;
 	private DataHelper db;
 	private String LOG_TAG = getClass().getSimpleName();
 	private File dstPath;
