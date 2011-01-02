@@ -84,6 +84,7 @@ public class WualaFile {
 			try {
 		    	URL url = new URL(this.url.replace("www.wuala.com", "content.wuala.com/contents")+"?key="+key);
 		        HttpURLConnection c = (HttpURLConnection)url.openConnection();
+		        c.setConnectTimeout(SyncFilesService.HTTP_TIMEOUT);
 		        c.setRequestMethod("GET");
 		        c.setDoOutput(true);
 		        c.connect();
