@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MenuInflater;
+//import android.view.MenuItem;
+//import android.view.MenuInflater;
 import android.util.Log;
 import android.view.View;
 import android.app.Dialog;
@@ -141,13 +141,15 @@ public class SyncFiles extends Activity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-    	MenuInflater inflater = getMenuInflater();
-    	inflater.inflate(R.menu.menu, menu);
+		Intent i = new Intent(SyncFiles.this, Preferences.class);
+		startActivity(i);
+/*    	MenuInflater inflater = getMenuInflater();
+    	inflater.inflate(R.menu.menu, menu);*/
     	return true;
     }
 
 	// This method is called once the menu is selected
-	@Override
+/*	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.preferences:
@@ -159,6 +161,6 @@ public class SyncFiles extends Activity {
 			break;
 		}
 		return true;
-	}
+	}*/
 	
 }
