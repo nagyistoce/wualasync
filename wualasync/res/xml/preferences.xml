@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-<PreferenceCategory android:title="User Settings"><CheckBoxPreference android:defaultValue="false" android:key="enableService" android:title="Enable sync service" android:summary="Is the synchronization service enabled"></CheckBoxPreference><EditTextPreference android:title="Wuala folder web URL" android:summary="Please set here your Wuala web folder URL. This folder must be public or shared with a weblink." android:key="wualaURL"></EditTextPreference>
+<PreferenceCategory android:title="User Settings"><CheckBoxPreference android:defaultValue="false" android:key="enableService" android:title="Enable sync service" android:summary="Is the sync service enabled"></CheckBoxPreference><EditTextPreference android:title="Wuala folder web URL" android:summary="Please set here your Wuala web folder URL. This folder must be public or shared with a weblink." android:key="wualaURL"></EditTextPreference>
 <EditTextPreference android:title="Wuala folder key" android:summary="If the shared Wuala folder is not public, but shared with weblink instead, then enter the key here." android:key="wualaKey"></EditTextPreference>
-<ListPreference android:entryValues="@array/destination" android:summary="Synchronization destination folder on the phone SD card" android:key="destPath" android:title="Destination folder" android:entries="@array/destination_display" android:defaultValue="MUSIC"></ListPreference><CheckBoxPreference android:key="allowDelete" android:summary="When file is deleted from Wuala folder, delete the file in phone also" android:title="Allow file deletion"></CheckBoxPreference>
-<ListPreference android:title="Syncronization interval" android:summary="How often to check for updates" android:entryValues="@array/update_intervals" android:entries="@array/update_interval_display" android:defaultValue="60" android:key="serviceSyncInterval"></ListPreference>
-<CheckBoxPreference android:key="onlyWifi" android:summary="Allow synchronization only over Wifi network" android:defaultValue="true" android:title="Use only Wifi"></CheckBoxPreference>
+<ListPreference android:entryValues="@array/destination" android:key="destPath" android:title="Destination folder" android:entries="@array/destination_display" android:defaultValue="MUSIC" android:summary="Sync destination folder on the phone SD card"></ListPreference><CheckBoxPreference android:key="allowDelete" android:summary="When file is deleted from Wuala folder, delete the file in phone also" android:title="Allow file deletion"></CheckBoxPreference>
+<ListPreference android:summary="How often to check for updates" android:entryValues="@array/update_intervals" android:entries="@array/update_interval_display" android:defaultValue="60" android:key="serviceSyncInterval" android:title="Sync interval"></ListPreference>
+<CheckBoxPreference android:key="onlyWifi" android:defaultValue="true" android:title="Use only Wifi" android:summary="Allow sync only when connected to Wifi network"></CheckBoxPreference>
 
 
 </PreferenceCategory>
