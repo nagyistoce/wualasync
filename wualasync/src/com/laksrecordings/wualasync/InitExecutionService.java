@@ -28,6 +28,8 @@ public class InitExecutionService extends Service {
 			case 15: l = AlarmManager.INTERVAL_FIFTEEN_MINUTES; break;
 			case 30: l = AlarmManager.INTERVAL_HALF_HOUR; break;
 			case 60: l = AlarmManager.INTERVAL_HOUR; break;
+			case 180: l = 3*AlarmManager.INTERVAL_HOUR; break;
+			case 360: l = 6*AlarmManager.INTERVAL_HOUR; break;
 			case 720: l = AlarmManager.INTERVAL_HALF_DAY; break;
 			case 1440: l = AlarmManager.INTERVAL_DAY; break;
 		}
