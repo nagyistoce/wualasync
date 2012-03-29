@@ -7,7 +7,9 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 
-import android.media.MediaScannerConnection;
+import android.content.Intent;
+//import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.StatFs;
 
 import android.util.Log;
@@ -86,7 +88,7 @@ public class WualaFile {
 		        HttpURLConnection c = (HttpURLConnection)url.openConnection();
 		        c.setConnectTimeout(SyncFilesService.HTTP_TIMEOUT);
 		        c.setRequestMethod("GET");
-		        c.setDoOutput(true);
+		        // c.setDoOutput(true);
 		        c.connect();
 		        
 		        FileOutputStream fos = new FileOutputStream(file);
@@ -109,7 +111,11 @@ public class WualaFile {
 		        is.close();
 		        createFileName = file.getAbsolutePath();
 		        // Scan file with Android Mediascanner
-		        MediaScannerConnection.scanFile(MAIN_SERVICE, new String[] {createFileName}, null, null);
+		        //MediaScannerConnection.scanFile(MAIN_SERVICE, new String[] {createFileName}, null, null);
+		        Uri contentUri = Uri.fromFile(file);
+		        Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
+		        mediaScanIntent.setData(contentUri);
+		        MAIN_SERVICE.sendBroadcast(mediaScanIntent);
 		        
 			} catch (Exception e) {
 		        file.delete();
