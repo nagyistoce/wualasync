@@ -4,6 +4,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.io.File;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.xml.sax.Attributes;
 import android.sax.Element;
 import android.sax.RootElement;
@@ -46,7 +48,7 @@ public class WualaDirectoryReader {
 	            	if (attributes != null && attributes.getValue("", "isEmpty").equals("false")) {
 	            		subdirs.add(new WualaDirRecord(
 	            				WualaFile.encodeUrl(attributes.getValue("", "url")), 
-	            				reldir+"/"+attributes.getValue("", "name")));
+	            				reldir+"/"+StringEscapeUtils.unescapeXml(attributes.getValue("", "name"))));
 	            	}
 	            }
 	        });
@@ -62,6 +64,7 @@ public class WualaDirectoryReader {
         // Files
         try {
 	    	URL url = new URL(wualaurl.replace("www.wuala.com", "api.wuala.com/publicFiles")+"?key="+key+"&il=1&ff=0");
+	    	Log.d(LOG_TAG, "API url: "+url.toString());
 	        URLConnection conn = url.openConnection();
 	        conn.setConnectTimeout(SyncFilesService.HTTP_TIMEOUT);
 	        
@@ -72,8 +75,8 @@ public class WualaDirectoryReader {
 	        item.setStartElementListener(new StartElementListener(){
 	            public void start(Attributes attributes) {
 	            	if (attributes != null) {
-	            		WualaFile w = new WualaFile(reldir, attributes.getValue("", "name"), attributes.getValue("", "url"), 
-		            			Integer.parseInt(attributes.getValue("", "size")));
+	            		WualaFile w = new WualaFile(reldir, StringEscapeUtils.unescapeXml(attributes.getValue("", "name")), 
+	            				attributes.getValue("", "url"), Integer.parseInt(attributes.getValue("", "size")));
 	            		if (db != null && dstPath != null)
 	            			db.insertWuala(dstPath.getPath()+w.getFullFilePath());
 	            		if (dstPath == null || (dstPath != null && !w.exists(dstPath.getPath()))) {
