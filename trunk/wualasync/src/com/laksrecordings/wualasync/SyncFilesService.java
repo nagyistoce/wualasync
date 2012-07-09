@@ -1,13 +1,18 @@
 package com.laksrecordings.wualasync;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.AsyncTask;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import java.io.File;
@@ -129,10 +134,14 @@ public class SyncFilesService extends Service {
     	return mExternalStorageAvailable && mExternalStorageWriteable;
 	}
 	
+	private boolean isWifiAvailable() {
+		ConnectivityManager cm = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+		return cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isAvailable();
+	}
 	private boolean checkInternet() {
 		ConnectivityManager cm = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
 		return (cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isAvailable() && !PREFS_ONLY_WIFI) || 
-		  cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isAvailable();
+			isWifiAvailable();
 	}
 	
     ///////////////////////////////////////////
@@ -247,6 +256,7 @@ public class SyncFilesService extends Service {
     }
 	
 	private void executeTask() {
+		
 		writeLastExecutionTime(true);
 		if (PREFS_WUALA_URL.equals("")) {
 			setNotConfigured();
@@ -254,7 +264,29 @@ public class SyncFilesService extends Service {
 		} else
 		if (isStorageAvailableAndWritable() && checkInternet() && !executionRunning) {
 			executionRunning = true;
+			//
+			WakeLock wakeLock = null;
+	        WifiLock wifiLock = null;
+			//
 			try {
+				// Get locks
+				PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+		        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WualaSyncWakeLock");
+		        if(!wakeLock.isHeld()){
+		            wakeLock.acquire();
+		        }
+		        Log.i(LOG_TAG, "WakeLock acquired!");
+		
+		        if (isWifiAvailable()) {
+			        WifiManager wm = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+			        wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF , "WualaSyncWifiLock");
+			        if(!wifiLock.isHeld()){
+			            wifiLock.acquire();
+			        }
+			        Log.i(LOG_TAG, "WifiLock acquired!");
+		        }
+
+				//
 				Log.i(LOG_TAG, "Task execution started");
 				db = new DataHelper(this);
 	    		dstPath.mkdirs();
@@ -296,6 +328,21 @@ public class SyncFilesService extends Service {
 			} catch (Exception e) {
 				Log.e(LOG_TAG, "Task execution failed: "+e.getMessage());
 				db.close();
+			} finally {
+				if (wakeLock != null) {
+	                if (wakeLock.isHeld()) {
+	                    wakeLock.release();
+	                    Log.i(LOG_TAG, "WakeLock released!");
+	                }
+	            }
+
+	            // release the WifiLock
+	            if (wifiLock != null) {
+	                if (wifiLock.isHeld()) {
+	                    wifiLock.release();
+	                    Log.i(LOG_TAG, "WiFi Lock released!");
+	                }
+	            }
 			}
 			executionRunning = false;
 			setNotActive();

@@ -27,6 +27,7 @@ public class WualaFile {
 		this.filename = filename;
 		this.url = encodeUrl(url);
 		this.filesize = filesize;
+		Log.d(LOG_TAG, directory);
 	}
 	
 	public void setMainService(SyncFilesService s) {
